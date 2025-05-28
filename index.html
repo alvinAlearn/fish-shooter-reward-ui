@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html>
 <head>
@@ -63,67 +62,67 @@
       "function rewards(address) public view returns (uint256)"
     ];
 
-    let provider, signer, contract;
+    let provider = null;
+    let signer = null;
+    let contract = null;
 
     async function connectWallet() {
-  try {
-    if (!window.ethereum) {
-      alert("❌ Wallet tidak terdeteksi.");
-      return;
-    }
+      try {
+        if (!window.ethereum) {
+          alert("❌ Wallet tidak terdeteksi.");
+          return;
+        }
 
-    // Coba switch ke Monad Testnet
-    const MONAD_CHAIN_ID = "0x31554"; // 201804
-    try {
-      await window.ethereum.request({
-        method: "wallet_switchEthereumChain",
-        params: [{ chainId: MONAD_CHAIN_ID }],
-      });
-    } catch (switchError) {
-      // Kalau belum ada chain Monad → tambahkan
-      if (switchError.code === 4902) {
-        await window.ethereum.request({
-          method: "wallet_addEthereumChain",
-          params: [{
-            chainId: MONAD_CHAIN_ID,
-            chainName: "Monad Testnet",
-            nativeCurrency: {
-              name: "tMEGA",
-              symbol: "tMEGA",
-              decimals: 18,
-            },
-            rpcUrls: ["https://testnet-rpc.monad.xyz"],
-            blockExplorerUrls: [],
-          }],
-        });
-      } else {
-        throw switchError;
+        // Auto switch to Monad Testnet
+        const MONAD_CHAIN_ID = "0x31554";
+        try {
+          await window.ethereum.request({
+            method: "wallet_switchEthereumChain",
+            params: [{ chainId: MONAD_CHAIN_ID }],
+          });
+        } catch (switchError) {
+          if (switchError.code === 4902) {
+            await window.ethereum.request({
+              method: "wallet_addEthereumChain",
+              params: [{
+                chainId: MONAD_CHAIN_ID,
+                chainName: "Monad Testnet",
+                nativeCurrency: {
+                  name: "tMEGA",
+                  symbol: "tMEGA",
+                  decimals: 18,
+                },
+                rpcUrls: ["https://rpc.testnet.monad.xyz"],
+                blockExplorerUrls: [],
+              }],
+            });
+          } else {
+            throw switchError;
+          }
+        }
+
+        await window.ethereum.request({ method: "eth_requestAccounts" });
+        provider = new ethers.BrowserProvider(window.ethereum);
+        signer = await provider.getSigner();
+        contract = new ethers.Contract(contractAddress, abi, signer);
+
+        const address = await signer.getAddress();
+        const reward = await contract.rewards(address);
+        const rewardETH = ethers.formatEther(reward);
+
+        document.getElementById("status").innerText =
+          `✅ Connected: ${address}
+🎁 Reward: ${rewardETH} tMEGA`;
+
+      } catch (err) {
+        console.error("Connect Error:", err);
+        document.getElementById("status").innerText = "❌ Connect Wallet Failed";
       }
     }
 
-    // Lanjut connect
-    await window.ethereum.request({ method: "eth_requestAccounts" });
-    provider = new ethers.BrowserProvider(window.ethereum);
-    signer = await provider.getSigner();
-    contract = new ethers.Contract(contractAddress, abi, signer);
-
-    const address = await signer.getAddress();
-    const reward = await contract.rewards(address);
-    const rewardETH = ethers.formatEther(reward);
-
-    document.getElementById("status").innerText =
-      `✅ Connected: ${address}\n🎁 Reward: ${rewardETH} tMEGA`;
-
-  } catch (err) {
-    console.error("Connect Error:", err);
-    document.getElementById("status").innerText = "❌ Connect Wallet Failed";
-  }
-}
-
-
     async function withdrawReward() {
       try {
-        if (!contract) {
+        if (!contract || !signer) {
           document.getElementById("status").innerText = "❌ Wallet belum connect bro!";
           return;
         }
@@ -139,9 +138,9 @@
     }
 
     function disconnectWallet() {
-      provider = undefined;
-      signer = undefined;
-      contract = undefined;
+      provider = null;
+      signer = null;
+      contract = null;
       document.getElementById("status").innerText = "🔌 Wallet disconnected.";
     }
   </script>
