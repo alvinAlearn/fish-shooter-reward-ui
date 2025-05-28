@@ -46,12 +46,13 @@
 
     async function connectWallet() {
       try {
-        if (typeof window.ethereum === "undefined") {
+        if (!window.ethereum) {
           alert("❌ Wallet tidak terdeteksi. Install MetaMask, Rabby, OKX, dsb.");
           return;
         }
 
         await window.ethereum.request({ method: "eth_requestAccounts" });
+
         provider = new ethers.BrowserProvider(window.ethereum);
         signer = await provider.getSigner();
         contract = new ethers.Contract(contractAddress, abi, signer);
@@ -86,9 +87,11 @@
     }
 
     function disconnectWallet() {
-      provider = null;
-      signer = null;
-      contract = null;
+      provider = undefined;
+      signer = undefined;
+      contract = undefined;
+
+      // Clear UI
       document.getElementById("status").innerText = "🔌 Wallet disconnected.";
     }
   </script>
