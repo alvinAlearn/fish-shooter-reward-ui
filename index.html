@@ -66,38 +66,60 @@
     let provider, signer, contract;
 
     async function connectWallet() {
-      try {
-        if (!window.ethereum) {
-          alert("❌ Wallet tidak terdeteksi. Install MetaMask, Rabby, OKX, dsb.");
-          return;
-        }
+  try {
+    if (!window.ethereum) {
+      alert("❌ Wallet tidak terdeteksi.");
+      return;
+    }
 
-        await window.ethereum.request({ method: "eth_requestAccounts" });
-
-        const chainId = await window.ethereum.request({ method: "eth_chainId" });
-        if (chainId !== "0x31554") {
-          alert("⚠️ Ganti dulu ke Monad Testnet bro.");
-          document.getElementById("status").innerText = "❌ Salah jaringan: bukan Monad Testnet!";
-          return;
-        }
-
-        provider = new ethers.BrowserProvider(window.ethereum);
-        signer = await provider.getSigner();
-        contract = new ethers.Contract(contractAddress, abi, signer);
-
-        const address = await signer.getAddress();
-        const reward = await contract.rewards(address);
-        const rewardETH = ethers.formatEther(reward);
-
-        document.getElementById("status").innerText =
-          `✅ Connected: ${address}
-🎁 Reward: ${rewardETH} tMEGA`;
-
-      } catch (err) {
-        console.error("Connect Error:", err);
-        document.getElementById("status").innerText = "❌ Connect Wallet Failed";
+    // Coba switch ke Monad Testnet
+    const MONAD_CHAIN_ID = "0x31554"; // 201804
+    try {
+      await window.ethereum.request({
+        method: "wallet_switchEthereumChain",
+        params: [{ chainId: MONAD_CHAIN_ID }],
+      });
+    } catch (switchError) {
+      // Kalau belum ada chain Monad → tambahkan
+      if (switchError.code === 4902) {
+        await window.ethereum.request({
+          method: "wallet_addEthereumChain",
+          params: [{
+            chainId: MONAD_CHAIN_ID,
+            chainName: "Monad Testnet",
+            nativeCurrency: {
+              name: "tMEGA",
+              symbol: "tMEGA",
+              decimals: 18,
+            },
+            rpcUrls: ["https://testnet-rpc.monad.xyz"],
+            blockExplorerUrls: [],
+          }],
+        });
+      } else {
+        throw switchError;
       }
     }
+
+    // Lanjut connect
+    await window.ethereum.request({ method: "eth_requestAccounts" });
+    provider = new ethers.BrowserProvider(window.ethereum);
+    signer = await provider.getSigner();
+    contract = new ethers.Contract(contractAddress, abi, signer);
+
+    const address = await signer.getAddress();
+    const reward = await contract.rewards(address);
+    const rewardETH = ethers.formatEther(reward);
+
+    document.getElementById("status").innerText =
+      `✅ Connected: ${address}\n🎁 Reward: ${rewardETH} tMEGA`;
+
+  } catch (err) {
+    console.error("Connect Error:", err);
+    document.getElementById("status").innerText = "❌ Connect Wallet Failed";
+  }
+}
+
 
     async function withdrawReward() {
       try {
