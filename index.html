@@ -1,0 +1,83 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Withdraw Reward</title>
+  <style>
+    body {
+      background-color: #121212;
+      color: white;
+      font-family: sans-serif;
+      text-align: center;
+      margin-top: 50px;
+    }
+    button {
+      padding: 10px 20px;
+      margin: 10px;
+      font-size: 16px;
+      border-radius: 8px;
+      background-color: #00c2ff;
+      border: none;
+      color: black;
+      cursor: pointer;
+    }
+    #status {
+      margin-top: 20px;
+      white-space: pre-line;
+    }
+  </style>
+</head>
+<body>
+  <h1>🎯 Fish Shooter Reward</h1>
+  <button onclick="connectWallet()">🔗 Connect Wallet</button>
+  <button onclick="withdrawReward()">💸 Withdraw Reward</button>
+  <p id="status">Status: Not connected</p>
+
+  <script src="https://cdn.jsdelivr.net/npm/ethers@6.6.2/dist/ethers.umd.min.js"></script>
+  <script>
+    const contractAddress = "0x19400754ea2A5AA3bC09C10eD09d490A1c9095A7";
+    const abi = [
+      "function withdrawReward() public",
+      "function rewards(address) public view returns (uint256)"
+    ];
+
+    let provider, signer, contract;
+
+    async function connectWallet() {
+      try {
+        if (typeof window.ethereum === "undefined") {
+          alert("❌ Tidak ada wallet terdeteksi. Silakan install MetaMask, Rabby, OKX, atau Trust Wallet.");
+          return;
+        }
+
+        await window.ethereum.request({ method: "eth_requestAccounts" });
+        provider = new ethers.BrowserProvider(window.ethereum);
+        signer = await provider.getSigner();
+        contract = new ethers.Contract(contractAddress, abi, signer);
+        const address = await signer.getAddress();
+        const reward = await contract.rewards(address);
+        const rewardETH = ethers.formatEther(reward);
+
+        document.getElementById("status").innerText = `✅ Connected: ${address}
+🎁 Reward: ${rewardETH} tMEGA`;
+      } catch (err) {
+        console.error(err);
+        document.getElementById("status").innerText = "❌ Connect Wallet Failed";
+      }
+    }
+
+    async function withdrawReward() {
+      try {
+        document.getElementById("status").innerText = "⏳ Withdrawing...";
+        const tx = await contract.withdrawReward();
+        await tx.wait();
+        document.getElementById("status").innerText = "✅ Reward withdrawn to wallet!";
+      } catch (err) {
+        console.error(err);
+        document.getElementById("status").innerText = "❌ Error withdrawing: " + err.message;
+      }
+    }
+  </script>
+</body>
+</html>
