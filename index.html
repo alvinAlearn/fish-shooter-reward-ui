@@ -33,7 +33,7 @@
       width: 100%;
       height: 100%;
       pointer-events: none;
-      background-image: url("https://gameflazz.com/assets/image/efek_hujan.gif");
+      background-image: url("https://img1.picmix.com/output/stamp/normal/8/0/2/7/327208_9a830.gif");
       background-size: cover;
       opacity: 0.1;
       z-index: 0;
@@ -74,7 +74,7 @@
         }
 
         // Auto switch to Monad Testnet
-        const MONAD_CHAIN_ID = "0x31554";
+        const MONAD_CHAIN_ID = "0x279f"; // 10143
         try {
           await window.ethereum.request({
             method: "wallet_switchEthereumChain",
@@ -88,11 +88,11 @@
                 chainId: MONAD_CHAIN_ID,
                 chainName: "Monad Testnet",
                 nativeCurrency: {
-                  name: "tMEGA",
-                  symbol: "tMEGA",
+                  name: "MON",
+                  symbol: "MON",
                   decimals: 18,
                 },
-                rpcUrls: ["https://rpc.testnet.monad.xyz"],
+                rpcUrls: ["https://testnet-rpc.monad.xyz"],
                 blockExplorerUrls: [],
               }],
             });
@@ -111,8 +111,7 @@
         const rewardETH = ethers.formatEther(reward);
 
         document.getElementById("status").innerText =
-          `✅ Connected: ${address}
-🎁 Reward: ${rewardETH} tMEGA`;
+          `✅ Connected: ${address}\n🎁 Reward: ${rewardETH} MON`;
 
       } catch (err) {
         console.error("Connect Error:", err);
