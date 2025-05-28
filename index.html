@@ -31,6 +31,7 @@
   <h1>🎯 Fish Shooter Reward</h1>
   <button onclick="connectWallet()">🔗 Connect Wallet</button>
   <button onclick="withdrawReward()">💸 Withdraw Reward</button>
+  <button onclick="disconnectWallet()">🔌 Disconnect</button>
   <p id="status">Status: Not connected</p>
 
   <script src="https://cdn.jsdelivr.net/npm/ethers@6.6.2/dist/ethers.umd.min.js"></script>
@@ -46,7 +47,7 @@
     async function connectWallet() {
       try {
         if (typeof window.ethereum === "undefined") {
-          alert("❌ Tidak ada wallet terdeteksi. Silakan install MetaMask, Rabby, OKX, atau Trust Wallet.");
+          alert("❌ Wallet tidak terdeteksi. Install MetaMask, Rabby, OKX, dsb.");
           return;
         }
 
@@ -59,7 +60,8 @@
         const reward = await contract.rewards(address);
         const rewardETH = ethers.formatEther(reward);
 
-        document.getElementById("status").innerText = `✅ Connected: ${address}\n🎁 Reward: ${rewardETH} tMEGA`;
+        document.getElementById("status").innerText =
+          `✅ Connected: ${address}\n🎁 Reward: ${rewardETH} tMEGA`;
       } catch (err) {
         console.error("Connect Error:", err);
         document.getElementById("status").innerText = "❌ Connect Wallet Failed";
@@ -81,6 +83,13 @@
         console.error("Withdraw Error:", err);
         document.getElementById("status").innerText = "❌ Withdraw Error: " + err.message;
       }
+    }
+
+    function disconnectWallet() {
+      provider = null;
+      signer = null;
+      contract = null;
+      document.getElementById("status").innerText = "🔌 Wallet disconnected.";
     }
   </script>
 </body>
